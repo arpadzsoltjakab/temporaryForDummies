@@ -2,7 +2,7 @@ package com.epam.me.temporaryForDummies;
 
 import java.util.*;
 
-public class Solution {
+public class Interview {
 
 	public static void main(String[] args) {
 
@@ -13,12 +13,15 @@ public class Solution {
 	}
 
 	public static List<Integer> reverse (List<Integer> nums) {
+		if( nums == null ) {
+			throw new IllegalArgumentException("The list cannot be null!");
+		}
 		if(nums.size() > 1) {
+			List<Integer> trimmedList = nums.subList(1, nums.size()-1);
+			reverse(trimmedList);
 			Integer tmp = nums.get(nums.size()-1);
 			nums.set(nums.size()-1, nums.get(0));
 			nums.set(0, tmp);
-			List<Integer> subList = nums.subList(1, nums.size()-1);
-			reverse(subList);
 		}
 		return nums;
 	}
