@@ -4,41 +4,98 @@ import java.util.*;
 
 public class Solution {
 
-	public static void main(String[] args) {
-
-		Scanner in = new Scanner(System.in);
-		Integer[] spam = new Integer[] { 1, 2, 3, 4, 5 };
-		ArrayList<Integer> list  = new ArrayList<>(Arrays.asList(spam));
-		System.out.println(reverse(list));
-	}
-
-	public static List<Integer> reverse (List<Integer> nums) {
-		if(nums.size() > 1) {
-			Integer tmp = nums.get(nums.size()-1);
-			nums.set(nums.size()-1, nums.get(0));
-			nums.set(0, tmp);
-			List<Integer> subList = nums.subList(1, nums.size()-1);
-			reverse(subList);
-		}
-		return nums;
-	}
-	
-	public static int getIndex(int[] input) {
-		int allSum = 0;
-		for(int i =0; i <input.length; i++) {
-			allSum += input[i];
-		}
-		
-		int leftSum = 0, rightSum = 0, min = allSum, minIndex = 0;
-		
-		for(int i =0; i <input.length; i++) {
-			leftSum += input[i];
-			if( min > Math.abs(allSum -(  2 * leftSum ) )) {
-				min = Math.abs(leftSum-rightSum);
-				minIndex = i;
-			}
-			
-		}	
-		return minIndex;
-	}
+    private static class Counter {
+ 
+        private long value;
+ 
+        void inc(final int delta) {
+            this.value += delta;
+        }
+ 
+        @Override
+        public String toString() {
+            return String.valueOf(this.value);
+        }
+    }
+ 
+    private static final class Node {
+ 
+        private final int value;
+ 
+        private Node next;
+ 
+        private Node(final int value) {
+            this.value = value;
+        }
+    }
+ 
+    public static void main(final String[] args) {
+        final Scanner in = new Scanner(System.in);
+        final int testCasesCount = in.nextInt();
+        for(int j = 0; j < testCasesCount; j++) {
+            final int numbersToSortCount = in.nextInt();
+            final Node[] numbersToSort = new Node[numbersToSortCount];
+            final Counter shifts = new Counter();
+            numbersToSort[0] = new Node(in.nextInt());
+            for(int i = 1; i < numbersToSortCount; i++) {
+                numbersToSort[i] = new Node(in.nextInt());
+                numbersToSort[i - 1].next = (numbersToSort[i]);
+            }
+            mergeSort(numbersToSort, 0, numbersToSortCount - 1, shifts);
+            System.out.println(shifts);
+        }
+    }
+ 
+    private static Node mergeSort(final Node[] numbersToSort, final int l, final int r, final Counter shifts) {
+        if(l < r) {
+            final int m = (l + r) / 2;
+            final Node left = mergeSort(numbersToSort, l, m, shifts);
+            final Node right = mergeSort(numbersToSort, m + 1, r, shifts);
+            return merge(left, l, m, right, m + 1, r, shifts);
+        }
+        return numbersToSort[l];
+    }
+ 
+    private static Node merge(Node left,
+                              int l1,
+                              final int r1,
+                              Node right,
+                              int l2,
+                              final int r2,
+                              final Counter shifts) {
+        final int rightRangeBegin = l2;
+        final Node first;
+        Node current;
+        if(left.value <= right.value) {
+            current = first = left;
+            left = left.next;
+            l1++;
+        }
+        else {
+            current = first = right;
+            right = right.next;
+            shifts.inc(rightRangeBegin - l1);
+            l2++;
+        }
+        while(l1 <= r1 && l2 <= r2) {
+            if(left.value <= right.value) {
+                current = current.next = left;
+                left = left.next;
+                l1++;
+            }
+            else {
+                current = current.next = right;
+                right = right.next;
+                shifts.inc(rightRangeBegin - l1);
+                l2++;
+            }
+        }
+        if(l1 <= r1) {
+            current.next = left;
+        }
+        else {
+            current.next = right;
+        }
+        return first;
+    }  
 }	
