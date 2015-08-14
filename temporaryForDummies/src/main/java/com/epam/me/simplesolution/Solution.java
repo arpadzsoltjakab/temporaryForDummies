@@ -1,4 +1,4 @@
-package com.epam.me.temporaryForDummies;
+package com.epam.me.simplesolution;
 
 import java.util.*;
 
