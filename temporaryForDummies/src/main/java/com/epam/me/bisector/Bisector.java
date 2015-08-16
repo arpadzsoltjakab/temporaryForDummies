@@ -1,4 +1,4 @@
-package com.epam.me.halvebyvalues;
+package com.epam.me.bisector;
 
 import java.util.*;
 
