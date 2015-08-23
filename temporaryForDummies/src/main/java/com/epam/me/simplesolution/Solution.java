@@ -11,7 +11,6 @@ public class Solution {
     }
 	
 	public static void sample(Integer i) {
-		i.valueOf(100);
 		System.out.println(i);
 	}
 }	
