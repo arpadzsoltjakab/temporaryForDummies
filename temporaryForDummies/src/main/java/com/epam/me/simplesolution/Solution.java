@@ -31,11 +31,9 @@ public class Solution {
 		
 		if (count == expectedWaves) {
 			System.out.println("Impressed");
-			System.out.println(count);
 		}
 		else {
 			System.out.println("Oops!");
-			System.out.println(count);
 		}
 	}
 	
@@ -64,6 +62,7 @@ public class Solution {
 
 		public int getWaveCount() {
 			setStartAndEndField();
+			
 			return getWaveCountFromStartToEnd();
 		}
 
@@ -95,7 +94,6 @@ public class Solution {
 			if(isIntersection()) {
 				if(isActFieldNotVisited()) {
 					waveCounter++;
-					System.out.println("intersec");
 				}
 				else if(isActVisitedOnce()) {
 					waveCounter--;
@@ -104,15 +102,9 @@ public class Solution {
 		}
 
 		private boolean isActVisitedOnce() {
-			int traveledStepCounter = 0;
-			ListIterator<Field> iterator = (ListIterator<Field>) possableNextFields.iterator();
-			while (iterator.hasNext()) {
-				Field field = iterator.next();
-				if(visitedFields[field.getRow()][field.getCol()] > 0)
-					traveledStepCounter++;
-			}			
-			
-			return traveledStepCounter == 2 || (traveledStepCounter == 1 && visitedFields[posOfHermione.getRow()][posOfHermione.getCol()] != 0);
+			return (visitedFields[posOfHermione.getRow()][posOfHermione.getCol()] != 0 
+					&& visitedFields[nextField.getRow()][nextField.getCol()] != 0
+					&& possableNextFields.size() > 2 );
 		}
 
 		private boolean isActFieldNotVisited() {
@@ -122,7 +114,7 @@ public class Solution {
 				Field field = iterator.next();
 				if(visitedFields[field.getRow()][field.getCol()] == 0)
 					notTraveledStepCounter++;
-			}			
+			}	
 			return visitedFields[posOfHermione.getRow()][posOfHermione.getCol()] == 0 && notTraveledStepCounter > 1;
 		}
 
