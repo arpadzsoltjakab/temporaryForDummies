@@ -8,45 +8,50 @@ public class Solution {
 	
 	public static void main(String[] args) {
     	int countOfTestCases = 1;
-		
     	for(int i = 0; i < countOfTestCases; i++){			  		
     		runTestCase();
 		}
     }
-	private static void runTestCase() {		
-		int sizeOfListA = in.nextInt();
-		
-		HashMap<Integer, Integer> missingHash = new HashMap<Integer, Integer>();
-		
-		
-		Integer value;
-		for (int i = 0; i < sizeOfListA; i++) {
-			int key = in.nextInt();
-			if(missingHash.containsKey(key)) {
-				value = missingHash.get(key);
-				missingHash.put(key, ++value);
-			}
-			else {
-				missingHash.put(key, 1);
-			}
-		}
-		
-		int sizeOfListB = in.nextInt();
-		Set<Integer> missingNumbers = new TreeSet<Integer>();
-		for (int i = 0; i < sizeOfListB; i++) {
-			int key = in.nextInt();
-			if((value = missingHash.get(key)) != null) {
-				missingHash.put(key, --value);
-			}
-			if (value == null || value == -1) {
-				missingNumbers.add(key);
-			}
-		}	
-		
-		Iterator iterator = missingNumbers.iterator();
 
-		while (iterator.hasNext()) {
-			System.out.print(iterator.next() + " ");
+	private static void runTestCase() {
+		int numberOfVertices = in.nextInt();
+		int numberOfEdges = in.nextInt();
+		
+		int removedEdges = 0;
+		
+		if (numberOfVertices % 2 == 0) {
+			for (int i = 0; i < numberOfVertices; i++) {
+				
+			}
 		}
 	}
+	
+	private static class Tree {
+		HashSet<Node> nodes = new HashSet<Node>();
+	}
+	
+	private static class Node {
+		
+		int value;
+		
+		HashSet<Integer> children = new HashSet<Integer>();
+
+		public Node(int value) {
+			this.value = value;
+		}	
+		
+		public Node(int value, int child) {
+			this.value = value;
+			children.add(child);
+		}			
+		
+		public void addChild(int child) {
+			children.add(child);
+		}
+		
+		public HashSet<Integer> getChildren() {
+			return children;
+		}
+	}
+
 }	
