@@ -307,19 +307,19 @@ class Position {
 
 class Room {
 	
+	private boolean rotatable;
+	
+	private Integer distance;
+	
 	private Grid grid;
 	
 	private RoomType defaultType;
-	
-	private RoomType pathType;
 	
 	private RoomType actType;
 	
 	private Room prev;
 	
 	private Room next;
-	
-	private boolean rotatable;
 	
 	private Position position;
 	
@@ -381,6 +381,10 @@ class Room {
 		
 		if (!triedTypes.containsKey(prev)) {
 			triedTypes.put(prev, new HashSet<RoomType>());
+			actType = defaultType;
+		}
+		else if (rotatable) {
+			rotateRight();
 		}
 		
 		while ((nextRoom == null || nextRoom.isBlocker()) && !triedTypes.get(prev).contains(actType)) {
@@ -402,18 +406,22 @@ class Room {
 					System.err.println("DOWN");
 				}
 				if (nextRoom != null && nextRoom.isGateWay()) {
-					pathType = actType;
 					nextRoom.actEntrance = getExit().opposite();
 					nextRoom.prev = this;
 					next = nextRoom;
-				}						
-			}
-			if (rotatable) {
-				rotateRight();
+				}	
+				else {
+					rotateRight();
+				}
 			}			
 		}	
 		
 		return nextRoom;
+	}
+	
+	public void initializeRoom() {
+		triedTypes.clear();
+		actType = defaultType;
 	}
 
 	public boolean isGateWay() {
@@ -438,13 +446,13 @@ class Room {
 
 	public int getRotation() {
 		int rotation = 0;
-		if (defaultType == pathType) {
+		if (defaultType == actType) {
 			rotation = 0;
 		}
-		else if (defaultType.rotateRight() == pathType) {
+		else if (defaultType.rotateRight() == actType) {
 			rotation = 1;
 		}
-		else if (defaultType.rotateLeft() == pathType) {
+		else if (defaultType.rotateLeft() == actType) {
 			rotation = -1;
 		}
 		else {
