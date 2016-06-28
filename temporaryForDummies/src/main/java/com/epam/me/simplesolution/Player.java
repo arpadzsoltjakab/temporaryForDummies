@@ -567,6 +567,10 @@ class Grid {
 		return hasFreeWay;
 	}
 
+	public Position getStartPosition() {
+		return startPosition;
+	}
+
 }
 
 class Player {
@@ -622,7 +626,7 @@ class Player {
 			for (int actWidth = 0; actWidth < tunnelMap.getWidth(); actWidth++) {
 				Position position = new Position(actWidth, actHeight);
             	Room room = mapStringToRoom(floor[actWidth], position, tunnelMap);
-            	if (actHeight == 0 && room.isGateWay() &&  !room.isRotatable()) {
+            	if (actHeight == 0 && room.isGateWay() &&  room.getActType() == RoomType.TYPE_3 && tunnelMap.getStartPosition() == null) {
 					tunnelMap.setStartPosition(position);
 				}
             	
