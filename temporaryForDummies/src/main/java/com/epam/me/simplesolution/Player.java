@@ -309,13 +309,13 @@ class Room {
 	
 	private boolean rotatable;
 	
-	private Integer distance;
+	private int distance = 0;
 	
 	private Grid grid;
 	
-	private RoomType defaultType;
-	
 	private RoomType actType;
+	
+	private RoomType rotatedType;
 	
 	private Room prev;
 	
@@ -328,8 +328,8 @@ class Room {
 	private Map<Room, HashSet<RoomType>> triedTypes = new HashMap<>();
  	
 	public Room(RoomType type, Position position, boolean rotatable, Grid grid) {
-		this.defaultType = type;
 		this.actType = type;
+		this.rotatedType = type;
 		this.position = position;
 		this.rotatable = rotatable;
 		this.grid = grid;
@@ -341,7 +341,7 @@ class Room {
 	}
 	
 	public RoomType getActType() {
-		return actType;
+		return rotatedType;
 	}
 
 	public boolean isRotatable() {
@@ -353,7 +353,7 @@ class Room {
 	}
 
 	public Direction getEntrance() {
-		return actType.hasEntrance(actEntrance) ? actEntrance : null;
+		return rotatedType.hasEntrance(actEntrance) ? actEntrance : null;
 	}
 
 	public void setEntrance(Direction entrance) {
@@ -361,7 +361,7 @@ class Room {
 	}
 
 	public Direction getExit() {
-		return actType.getExitByEntrance(getEntrance());
+		return rotatedType.getExitByEntrance(getEntrance());
 	}
 
 	
@@ -377,12 +377,12 @@ class Room {
 		Room nextRoom = null;
 		System.err.println("entrance " + this.getEntrance());
 		System.err.println("exit " + this.getExit());
-		System.err.println("type " + this.defaultType);
+		System.err.println("type " + this.actType);
 		
 		setActTypeForNextRoom();
 		
-		if (!triedTypes.get(prev).contains(actType)) {
-			triedTypes.get(prev).add(actType);
+		if (!triedTypes.get(prev).contains(rotatedType)) {
+			triedTypes.get(prev).add(rotatedType);
 			nextRoom = getActRoomTypeExitsNext();
 			
 			if (nextRoom != null && nextRoom.isGateWay()) {
@@ -401,14 +401,14 @@ class Room {
 	private void setActTypeForNextRoom() {
 		if (!triedTypes.containsKey(prev)) {
 			triedTypes.put(prev, new HashSet<RoomType>());
-			actType = defaultType;
+			rotatedType = actType;
 		}
 		else if (rotatable) {
-			rotateRight();
+			rotatedType = rotatedType.rotateRight();
 		}
 	}
 
-	private Room getActRoomTypeExitsNext() {
+	public Room getActRoomTypeExitsNext() {
 		Room nextRoom = null;
 		Direction exit = getExit();
 		if (exit != null) {
@@ -432,15 +432,18 @@ class Room {
 	
 	public void initializeRoom() {
 		triedTypes.clear();
-		actType = defaultType;
+		rotatedType = actType;
+		distance = 0;
+		prev = null;
+		next = null;
 	}
 
 	public boolean isGateWay() {
-		return this.defaultType != RoomType.TYPE_0;
+		return this.actType != RoomType.TYPE_0;
 	}
 	
 	public boolean isBlocker() {
-		return this.defaultType == RoomType.TYPE_0;
+		return this.actType == RoomType.TYPE_0;
 	}
 
 	public boolean isNotGateWayFrom(Room room) {
@@ -457,19 +460,28 @@ class Room {
 
 	public int getRotation() {
 		int rotation = 0;
-		if (defaultType == actType) {
+		if (actType == rotatedType) {
 			rotation = 0;
 		}
-		else if (defaultType.rotateRight() == actType) {
+		else if (actType.rotateRight() == rotatedType) {
 			rotation = 1;
 		}
-		else if (defaultType.rotateLeft() == actType) {
+		else if (actType.rotateLeft() == rotatedType) {
 			rotation = -1;
 		}
 		else {
 			rotation = 2;
 		}
 		return rotation;
+	}
+
+	public void setDistance(int distance) {
+		this.distance = distance;
+		
+	}
+	
+	public int getDistance() {
+		return distance;
 	}
 	
 }
@@ -478,10 +490,9 @@ class Grid {
 
 	Map<Position, Room> rooms = new HashMap<>();
 	
-	Queue<String> rotationQueue = new LinkedList<String>();
+	TreeMap<Integer,String> rotationMap = new TreeMap<>();
 	
 	private Position endPosition;
-	private Position startPosition;
 	private int height;
 	private int width;
 	
@@ -492,11 +503,6 @@ class Grid {
 	
 	Room getRoom(Position position) {
 		return rooms.get(position);
-	}
-	
-	public void setStartPosition(Position startPosition) {
-		this.startPosition = startPosition;
-		this.getRoom(startPosition).setEntrance(Direction.TOP);
 	}
 	
 	public void setEndPosition(Position endPosition) {
@@ -515,17 +521,28 @@ class Grid {
 		return width;
 	}
 	
-	public void findPathFromStartToEnd() {
+	public void initializeGrid() {
+		for(Room room :rooms.values()) {
+			room.initializeRoom();
+		}
+		rotationMap.clear();
+	}
+	
+	public void findPathFromStartToEnd(Position startPosition) {
+		
 		System.err.println("move " +  getRoom(startPosition).getPosition() );
 		Room actRoom = getRoom(startPosition).getNextRoom();
+		actRoom.setDistance(1);
 		System.err.println("move " + actRoom.getPosition() );
 		while (actRoom != getRoom(endPosition)) {
 			
 			Room nextRoom = actRoom.getNextRoom();
 			if (nextRoom == null || nextRoom.isBlocker()) {
+				actRoom.setDistance(0);
 				actRoom = actRoom.getPrev();
 			}
 			else{
+				nextRoom.setDistance(actRoom.getDistance() + 1);
 				actRoom = nextRoom;
 			}
 			System.err.println("move " + actRoom.getPosition() );
@@ -533,44 +550,45 @@ class Grid {
 		
 		actRoom = getRoom(startPosition).getNext();
 		
-		while (actRoom != getRoom(endPosition)) {
-			if (actRoom.isRotatable()) {
-				if (actRoom.getRotation() == 1) {
-					rotationQueue.add(actRoom.getPosition() + " RIGHT");
-				}
-				else if (actRoom.getRotation() == -1) {
-					rotationQueue.add(actRoom.getPosition() + " LEFT");
-				}
-				else if (actRoom.getRotation() == 2) {
-					rotationQueue.add(actRoom.getPosition() + " RIGHT");
-					rotationQueue.add(actRoom.getPosition() + " RIGHT");
-				}
-			}
+		while (actRoom != getRoom(endPosition) && actRoom.getRotation() == 0) {
 			actRoom = actRoom.getNext();
+		}
+		if (actRoom.isRotatable()) {
+			if (actRoom.getRotation() >= 1) {
+				actRoom.rotateRight();
+				rotationMap.put(actRoom.getDistance(), actRoom.getPosition() + " RIGHT");
+			}
+			else if (actRoom.getRotation() == -1) {
+				actRoom.rotateLeft();
+				rotationMap.put(actRoom.getDistance(), actRoom.getPosition() + " LEFT");
+			}
 		}
 	}
 
 	public String nextCommand() {
 		String nextCommand = "WAIT";
-		if (!rotationQueue.isEmpty()) {
-			nextCommand = rotationQueue.poll();
+		if (!rotationMap.isEmpty()) {
+			
+			nextCommand = rotationMap.remove(rotationMap.firstKey());
 		}
 		return nextCommand;
 	}
 
-	public boolean hasFreeWayFrom(Position indiActPosition) {
-		boolean hasFreeWay = true;
-		if (getRoom(indiActPosition).getNext().getRotation() != 0 || 
-			getRoom(indiActPosition).getNext().getNext().getRotation() == 2) {
-			hasFreeWay = false;
+	public void compareRockPathWithIndisPath(Position rockPosition) {
+		Room actRoom = getRoom(rockPosition).getActRoomTypeExitsNext();
+		while (actRoom != null && actRoom.getDistance() == 0) {
+			actRoom.setDistance(actRoom.getPrev().getDistance() + 1);
+			actRoom = actRoom.getActRoomTypeExitsNext();
+		} 
+		
+		if (actRoom != null || actRoom.getDistance() == actRoom.getPrev().getDistance() + 1) {
+			while (!actRoom.isRotatable()) {
+				if (actRoom.getRotation() != 0 && actRoom.getActType() == RoomType.TYPE_6) {
+					
+				}
+			}
 		}
-		return hasFreeWay;
 	}
-
-	public Position getStartPosition() {
-		return startPosition;
-	}
-
 }
 
 class Player {
@@ -591,15 +609,17 @@ class Player {
         int exit = IN.nextInt(); // the coordinate along the X axis of the exit (not useful for this first mission, but must be read).
         System.err.println(exit);
         tunnelMap.setEndPosition(new Position(exit, height - 1));
-        
-        tunnelMap.findPathFromStartToEnd();
-        
+         
         // game loop
         while (true) {
         	Position IndiActPosition = new Position(IN.nextInt(), IN.nextInt());
         	
             Direction entranceDirection = Enum.valueOf(Direction.class, IN.next()); 
 
+            tunnelMap.getRoom(IndiActPosition).setEntrance(entranceDirection);
+            tunnelMap.initializeGrid();
+            tunnelMap.findPathFromStartToEnd(IndiActPosition);
+            
             int numberOfRocks = IN.nextInt(); // the number of rocks currently in the grid.
          
             for (int i = 0; i < numberOfRocks; i++) {
@@ -608,6 +628,8 @@ class Player {
                 int YR = IN.nextInt();
                 Position rockPosition = new Position(XR, YR);
                 Direction entranceOfRock = Enum.valueOf(Direction.class, IN.next()); 
+                tunnelMap.getRoom(rockPosition).setEntrance(entranceOfRock);
+                tunnelMap.compareRockPathWithIndisPath(rockPosition);
                 
                 System.err.println("ROCK " + rockPosition + " " + entranceOfRock);
             }
@@ -626,10 +648,6 @@ class Player {
 			for (int actWidth = 0; actWidth < tunnelMap.getWidth(); actWidth++) {
 				Position position = new Position(actWidth, actHeight);
             	Room room = mapStringToRoom(floor[actWidth], position, tunnelMap);
-            	if (actHeight == 0 && room.isGateWay() &&  room.getActType() == RoomType.TYPE_3 && tunnelMap.getStartPosition() == null) {
-					tunnelMap.setStartPosition(position);
-				}
-            	
 			}
         }
 	}
