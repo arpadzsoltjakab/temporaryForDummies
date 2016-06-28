@@ -381,7 +381,7 @@ class Room {
 		
 		setActTypeForNextRoom();
 		
-		if ((nextRoom == null || nextRoom.isBlocker()) && !triedTypes.get(prev).contains(actType)) {
+		if (!triedTypes.get(prev).contains(actType)) {
 			triedTypes.get(prev).add(actType);
 			nextRoom = getActRoomTypeExitsNext();
 			
@@ -596,11 +596,8 @@ class Player {
         	
             Direction entranceDirection = Enum.valueOf(Direction.class, IN.next()); 
 
-            Position bestRocksPosition = null;
-            
             int numberOfRocks = IN.nextInt(); // the number of rocks currently in the grid.
-            
-            int distance = 1000;
+         
             for (int i = 0; i < numberOfRocks; i++) {
             	System.err.println();
                 int XR = IN.nextInt();
@@ -608,31 +605,10 @@ class Player {
                 Position rockPosition = new Position(XR, YR);
                 Direction entranceOfRock = Enum.valueOf(Direction.class, IN.next()); 
                 
-                
-                tunnelMap.getRoom(rockPosition).setEntrance(entranceOfRock);
-                Room nextRoomOfRock = tunnelMap.getRoom(rockPosition).getNextRoom();
-                if (tunnelMap.hasFreeWayFrom(IndiActPosition) && IndiActPosition.isDangerousDistance(rockPosition) && IndiActPosition.distanceFrom(rockPosition) < distance) {
-                	while(nextRoomOfRock != null && !nextRoomOfRock.isRotatable()) {
-                		nextRoomOfRock = nextRoomOfRock.getNextRoom();
-                	}
-                    if (nextRoomOfRock != null && nextRoomOfRock.isRotatable() && IndiActPosition.isDangerousDistance(rockPosition) && IndiActPosition.distanceFrom(rockPosition) < distance) {
-                    	distance = IndiActPosition.distanceFrom(rockPosition);
-                    	bestRocksPosition = nextRoomOfRock.getPosition();
-    				}					
-				}
-
                 System.err.println("ROCK " + rockPosition + " " + entranceOfRock);
             }
             
-            String command;
-            if (bestRocksPosition != null && tunnelMap.hasFreeWayFrom(IndiActPosition)) {
-            	command = bestRocksPosition + " RIGHT";
-			}
-            else {
-            	command = tunnelMap.nextCommand();	
-            }
-     
-            
+            String command = tunnelMap.nextCommand();	
              
             // One line containing the X Y coordinates of the room in which you believe Indy will be on the next turn.
             System.out.println(command);
