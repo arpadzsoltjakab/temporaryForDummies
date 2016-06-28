@@ -379,6 +379,26 @@ class Room {
 		System.err.println("exit " + this.getExit());
 		System.err.println("type " + this.defaultType);
 		
+		setActTypeForNextRoom();
+		
+		if ((nextRoom == null || nextRoom.isBlocker()) && !triedTypes.get(prev).contains(actType)) {
+			triedTypes.get(prev).add(actType);
+			nextRoom = getActRoomTypeExitsNext();
+			
+			if (nextRoom != null && nextRoom.isGateWay()) {
+				nextRoom.actEntrance = getExit().opposite();
+				nextRoom.prev = this;
+				next = nextRoom;
+			}	
+			else {
+				nextRoom = getNextRoom();
+			}
+		}	
+		
+		return nextRoom;
+	}
+
+	private void setActTypeForNextRoom() {
 		if (!triedTypes.containsKey(prev)) {
 			triedTypes.put(prev, new HashSet<RoomType>());
 			actType = defaultType;
@@ -386,36 +406,27 @@ class Room {
 		else if (rotatable) {
 			rotateRight();
 		}
-		
-		while ((nextRoom == null || nextRoom.isBlocker()) && !triedTypes.get(prev).contains(actType)) {
-			triedTypes.get(prev).add(actType);
-			Direction exit = getExit();
-			if (exit != null) {
-				if (exit == Direction.LEFT) {
-					nextRoom = grid.getRoom(position.goLeft());
-					System.err.println("LEFT");
-				}
-				else if (exit == Direction.RIGHT) {
-					nextRoom = grid.getRoom(position.goRight());
-					
-					System.err.println("RIGHT");
-				}
-				else if (exit == Direction.DOWN) {
-					nextRoom = grid.getRoom(position.goDown());
-					
-					System.err.println("DOWN");
-				}
-				if (nextRoom != null && nextRoom.isGateWay()) {
-					nextRoom.actEntrance = getExit().opposite();
-					nextRoom.prev = this;
-					next = nextRoom;
-				}	
-				else {
-					rotateRight();
-				}
-			}			
-		}	
-		
+	}
+
+	private Room getActRoomTypeExitsNext() {
+		Room nextRoom = null;
+		Direction exit = getExit();
+		if (exit != null) {
+			if (exit == Direction.LEFT) {
+				nextRoom = grid.getRoom(position.goLeft());
+				System.err.println("LEFT");
+			}
+			else if (exit == Direction.RIGHT) {
+				nextRoom = grid.getRoom(position.goRight());
+				
+				System.err.println("RIGHT");
+			}
+			else if (exit == Direction.DOWN) {
+				nextRoom = grid.getRoom(position.goDown());
+				
+				System.err.println("DOWN");
+			}
+		}
 		return nextRoom;
 	}
 	
