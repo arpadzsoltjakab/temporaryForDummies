@@ -340,7 +340,7 @@ class Room {
 		return position;
 	}
 	
-	public RoomType getActType() {
+	public RoomType getRotatedType() {
 		return rotatedType;
 	}
 
@@ -365,12 +365,20 @@ class Room {
 	}
 
 	
-	public void rotateLeft() {
+	public void rotateLeftActType() {
 		actType = actType.rotateLeft();
 	}
 	
-	public void rotateRight() {
+	public void rotateRightActType() {
 		actType = actType.rotateRight();
+	}
+	
+	public void rotateLeftRotatedType() {
+		rotatedType = rotatedType.rotateLeft();
+	}
+	
+	public void rotateRightRotatedType() {
+		rotatedType = rotatedType.rotateRight();
 	}
 	
 	public Room getNextRoom() {
@@ -379,18 +387,13 @@ class Room {
 		System.err.println("exit " + this.getExit());
 		System.err.println("type " + this.actType);
 		
-		setActTypeForNextRoom();
+		setRotatedTypeForNextRoom();
 		
 		if (!triedTypes.get(prev).contains(rotatedType)) {
 			triedTypes.get(prev).add(rotatedType);
 			nextRoom = getActRoomTypeExitsNext();
 			
-			if (nextRoom != null && nextRoom.isGateWay()) {
-				nextRoom.actEntrance = getExit().opposite();
-				nextRoom.prev = this;
-				next = nextRoom;
-			}	
-			else {
+			if (nextRoom == null) {
 				nextRoom = getNextRoom();
 			}
 		}	
@@ -398,7 +401,7 @@ class Room {
 		return nextRoom;
 	}
 
-	private void setActTypeForNextRoom() {
+	private void setRotatedTypeForNextRoom() {
 		if (!triedTypes.containsKey(prev)) {
 			triedTypes.put(prev, new HashSet<RoomType>());
 			rotatedType = actType;
@@ -427,6 +430,15 @@ class Room {
 				System.err.println("DOWN");
 			}
 		}
+		if (nextRoom != null && nextRoom.isGateWay()) {
+			nextRoom.actEntrance = getExit().opposite();
+			nextRoom.prev = this;
+			next = nextRoom;
+		}	
+		else {
+			nextRoom = null;
+		}
+		
 		return nextRoom;
 	}
 	
@@ -490,7 +502,7 @@ class Grid {
 
 	Map<Position, Room> rooms = new HashMap<>();
 	
-	TreeMap<Integer,String> rotationMap = new TreeMap<>();
+	TreeMap<Integer, Room> rotationMap = new TreeMap<>();
 	
 	private Position endPosition;
 	private int height;
@@ -553,41 +565,83 @@ class Grid {
 		while (actRoom != getRoom(endPosition) && actRoom.getRotation() == 0) {
 			actRoom = actRoom.getNext();
 		}
-		if (actRoom.isRotatable()) {
-			if (actRoom.getRotation() >= 1) {
-				actRoom.rotateRight();
-				rotationMap.put(actRoom.getDistance(), actRoom.getPosition() + " RIGHT");
-			}
-			else if (actRoom.getRotation() == -1) {
-				actRoom.rotateLeft();
-				rotationMap.put(actRoom.getDistance(), actRoom.getPosition() + " LEFT");
-			}
+		if (actRoom.isRotatable() && actRoom.getRotation() != 0) {
+			rotationMap.put(actRoom.getDistance() - Math.abs(actRoom.getRotation()), actRoom);
+
 		}
 	}
 
 	public String nextCommand() {
 		String nextCommand = "WAIT";
-		if (!rotationMap.isEmpty()) {
+		
+		if (!rotationMap.isEmpty()) {		
+			Room rotatedRoom = rotationMap.remove(rotationMap.firstKey());
 			
-			nextCommand = rotationMap.remove(rotationMap.firstKey());
+			if (rotatedRoom.getRotation() > 0) {
+				rotatedRoom.rotateRightActType();
+
+				nextCommand = rotatedRoom.getPosition() + " RIGHT";
+			}
+			else if (rotatedRoom.getRotation() < 0) {
+				rotatedRoom.rotateLeftActType();
+				
+				nextCommand = rotatedRoom.getPosition() + " LEFT";
+			}			
 		}
+		
 		return nextCommand;
 	}
 
 	public void compareRockPathWithIndisPath(Position rockPosition) {
-		Room actRoom = getRoom(rockPosition).getActRoomTypeExitsNext();
-		while (actRoom != null && actRoom.getDistance() == 0) {
-			actRoom.setDistance(actRoom.getPrev().getDistance() + 1);
-			actRoom = actRoom.getActRoomTypeExitsNext();
+		Room joinerRoom = getRoom(rockPosition).getActRoomTypeExitsNext();
+		while (joinerRoom != null && joinerRoom.getDistance() == 0) {
+			joinerRoom.setDistance(joinerRoom.getPrev().getDistance() + 1);
+			joinerRoom = joinerRoom.getActRoomTypeExitsNext();
 		} 
 		
-		if (actRoom != null || actRoom.getDistance() == actRoom.getPrev().getDistance() + 1) {
-			while (!actRoom.isRotatable()) {
-				if (actRoom.getRotation() != 0 && actRoom.getActType() == RoomType.TYPE_6) {
-					
-				}
-			}
+		if (joinerRoom != null && joinerRoom.getDistance() == joinerRoom.getPrev().getDistance() + 1) {
+			findSeparatorRoom(joinerRoom);
 		}
+	}
+
+	private void findSeparatorRoom(Room joinerRoom) {
+		Room separatorRoom = joinerRoom;
+		while (isNotSeparatorRoom(separatorRoom, joinerRoom)) {
+			separatorRoom = separatorRoom.getPrev();
+		}
+	}
+
+	private boolean isNotSeparatorRoom(Room separatorRoom, Room joinerRoom) {
+		if (separatorRoom == null)
+			return false;
+		
+		if (separatorRoom.isRotatable() && separatorRoom != joinerRoom)  {
+			separatorRoom.rotateRightRotatedType();
+			rotationMap.put(separatorRoom.getDistance() - Math.abs(separatorRoom.getRotation()), separatorRoom);
+			return false;
+		}
+		
+		if ( separatorRoom.isRotatable() && separatorRoom == joinerRoom && separatorRoom.getExit() != null) {
+			if (separatorRoom.getRotatedType() == RoomType.TYPE_7) {
+				separatorRoom.rotateRightRotatedType();
+			}
+			else if (separatorRoom.getRotatedType() == RoomType.TYPE_8 && separatorRoom.getEntrance() == Direction.LEFT) {
+				separatorRoom.rotateLeftRotatedType();
+			}
+			else if (separatorRoom.getRotatedType() == RoomType.TYPE_8 && separatorRoom.getEntrance() == Direction.RIGHT) {
+				separatorRoom.rotateRightRotatedType();
+			}
+			else if (separatorRoom.getRotatedType() == RoomType.TYPE_9 && separatorRoom.getEntrance() == Direction.TOP) {
+				separatorRoom.rotateLeftRotatedType();
+			}
+			else if (separatorRoom.getRotatedType() == RoomType.TYPE_9 && separatorRoom.getEntrance() == Direction.LEFT) {
+				separatorRoom.rotateRightRotatedType();
+			}
+			rotationMap.put(separatorRoom.getDistance() - Math.abs(separatorRoom.getRotation()), separatorRoom);
+			return false;
+		}
+		
+		return true;
 	}
 }
 
