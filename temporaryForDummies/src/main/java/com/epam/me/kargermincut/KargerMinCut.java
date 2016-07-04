@@ -1,5 +1,8 @@
 package com.epam.me.kargermincut;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -80,6 +83,15 @@ class Vertex {
 		edges.clear();
 		
 	}
+
+	public boolean notConnectedTo(Vertex right) {
+		for (Edge e : edges) {
+			if (e.getLeft() == right || e.getRight() == right) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 class Graph {
@@ -91,18 +103,17 @@ class Graph {
 		vertices.put(vertex.getId(), vertex);
 	}
 	
-	public void removeVertex(Vertex vertex) {
-		vertices.remove(vertex.getId());
-	}
-	
 	public void addEdge(int leftId, int rightId) {
 		Vertex left = vertices.get(leftId);
 		Vertex right = vertices.get(rightId);
-		Edge edge = new Edge(left, right);
 		
-		left.add(edge);
-		right.add(edge);
-		edges.add(edge);
+		if (left.notConnectedTo(right)) {
+			Edge edge = new Edge(left, right);
+			
+			left.add(edge);
+			right.add(edge);
+			edges.add(edge);	
+		}
 	}
 	
 	public void removeRandomEdge() {
@@ -118,40 +129,68 @@ class Graph {
 			e.changeVertex(right, left);
 		}		
 		left.add(rightEdges);
-		right.clearEdges();
 		
-		for(Edge e : edges) {
+		
+		for(Edge e : rightEdges) {
 			if (e.getLeft() == e.getRight()) {
 				edges.remove(e);
 				left.remove(e);
 			}
 		}
+		right.clearEdges();
 		
 		vertices.remove(right.getId());
+	}
+
+	public int numberOfVertices() {
+		return vertices.size();
+	}
+
+	public int numberOfEdges() {
+		return edges.size();
 	}
 }
 
 public class KargerMinCut {
-	private static Scanner in = new Scanner(System.in); 
+	private static Scanner in;  
 
-	public static void main(String[] args) {
+	private static int minCut = 200;
+	
+	public static void main(String[] args) throws FileNotFoundException {
+		
 		int initNumberOfVerticies = 200;
 		
-		Graph graph = new Graph();
-		for(int i = 1; i <= initNumberOfVerticies; i++){			  		
-			Vertex vertex = new Vertex(i);
-			graph.addVertex(vertex);
-		}
-		
-		for (int i = 0; i < 200; i++) {
-			String[] lineText = in.nextLine().split("\\s+");
-			int[] lineNumbers = new int[lineText.length];
-			for (int j = 0; j < lineNumbers.length; j++) {
-				lineNumbers[j] = Integer.parseInt(lineText[j]);
-				if (j != 0) {
-					graph.addEdge(lineNumbers[0], lineNumbers[j]);
+		for (int k = 0; k < 200000; k++) {
+			FileReader inputStream  = new FileReader("/myjavaprograms/kargerMinCut.txt");
+			in = new Scanner(inputStream);
+			Graph graph = new Graph();
+			for(int i = 1; i <= initNumberOfVerticies; i++){			  		
+				Vertex vertex = new Vertex(i);
+				graph.addVertex(vertex);
+			}
+			
+			for (int i = 0; i < 200; i++) {
+				String[] lineText = in.nextLine().split("\\s+");
+				int[] lineNumbers = new int[lineText.length];
+				for (int j = 0; j < lineNumbers.length; j++) {
+					lineNumbers[j] = Integer.parseInt(lineText[j]);
+					if (j != 0) {
+						graph.addEdge(lineNumbers[0], lineNumbers[j]);
+					}
 				}
 			}
+			
+			while (2 < graph.numberOfVertices() ) {
+			  graph.removeRandomEdge();
+			}
+			
+			if (minCut > graph.numberOfEdges() ) {
+				minCut = graph.numberOfEdges();
+			}	
+			System.out.println(k);
 		}
+
+		
+		System.out.println(minCut);
 	}
 }
