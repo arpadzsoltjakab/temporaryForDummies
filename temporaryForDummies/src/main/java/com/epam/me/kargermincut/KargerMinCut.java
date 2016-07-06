@@ -187,7 +187,10 @@ public class KargerMinCut {
 			if (minCut > graph.numberOfEdges() ) {
 				minCut = graph.numberOfEdges();
 			}	
-			System.out.println(k);
+			if (k % 1000 == 0) {
+				System.out.println(k);
+				System.out.println(minCut);
+			}			
 		}
 
 		
