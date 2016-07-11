@@ -30,6 +30,11 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+					<resources>
+     					<resource>
+       						<directory>src/main/resources</directory>
+     					</resource>
+   					</resources>
 				</configuration>
 			</plugin>
 		</plugins>

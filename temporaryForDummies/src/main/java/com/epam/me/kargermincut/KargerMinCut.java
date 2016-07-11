@@ -3,6 +3,9 @@ package com.epam.me.kargermincut;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -160,8 +163,9 @@ public class KargerMinCut {
 		
 		int initNumberOfVerticies = 200;
 		
-		for (int k = 0; k < 200000; k++) {
-			FileReader inputStream  = new FileReader("/myjavaprograms/kargerMinCut.txt");
+		
+		for (int k = 0; k < 500; k++) {
+			InputStream inputStream  = ClassLoader.getSystemClassLoader().getResourceAsStream("kargermincut/kargerMinCut.txt");
 			in = new Scanner(inputStream);
 			Graph graph = new Graph();
 			for(int i = 1; i <= initNumberOfVerticies; i++){			  		
@@ -187,7 +191,7 @@ public class KargerMinCut {
 			if (minCut > graph.numberOfEdges() ) {
 				minCut = graph.numberOfEdges();
 			}	
-			if (k % 1000 == 0) {
+			if (k % 100 == 0) {
 				System.out.println(k);
 				System.out.println(minCut);
 			}			
