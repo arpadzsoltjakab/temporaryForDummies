@@ -105,7 +105,7 @@ public class Scc {
 	
 	private static Scanner in;  
 	private static int initNumberOfVerticies = 875714;
-	//private static int initNumberOfVerticies = 9;
+	//private static int initNumberOfVerticies = 12;
 	private static int t = 0;
 	private static int numberOfConnections = 0;
 	private static Node s = null;
@@ -128,12 +128,6 @@ public class Scc {
 			int second = in.nextInt();
 			graph.addEdge(first, second);
 		}
-		
-//		for (int i = 0; i < 11; i++) {
-//			int first = in.nextInt();
-//			int second = in.nextInt();
-//			graph.addEdge(first, second);			
-//		}
 		
 		for(int i = initNumberOfVerticies ; i > 0; i--){	
 			Node actNode = graph.getRevMap().get(i);
@@ -160,7 +154,9 @@ public class Scc {
 		}
 		
 		for (Integer i : sccSet) {
-			System.out.println(i);
+			if (i > 200) {
+				System.out.println(i);
+			}		
 		}
 	}
 	
