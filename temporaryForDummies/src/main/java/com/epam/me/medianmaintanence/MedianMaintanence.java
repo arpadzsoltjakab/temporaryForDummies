@@ -106,21 +106,46 @@ class MaxHeap {
 	}
 }
 
+
 public class MedianMaintanence {
 	
-	private MinHeap  heapHigh = new MinHeap();
-	private MaxHeap  heapLow = new MaxHeap();
+	private static MinHeap  heapHigh = new MinHeap();
+	private static MaxHeap  heapLow = new MaxHeap();
 
-	public void add(int key) {
-		if (key > heapHigh.min()) {
+	public static void add(int key) {
+		if (key > heapLow.max()) {
 			heapHigh.insert(key);
 		}
+		else {
+			heapLow.insert(key);
+		}
+		if (heapLow.getSize() < heapHigh.getSize()) {
+			heapLow.insert(heapHigh.extractMin());
+		}
+		if (heapHigh.getSize() + 1 < heapLow.getSize()) {
+			heapHigh.insert(heapLow.extractMax());
+		}
+	}
+	
+	public static int getMedian() {
+		return heapLow.max();
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException {
 		
 		InputStream inputStream  = ClassLoader.getSystemClassLoader().getResourceAsStream("medianmaintanence/median.txt");
 		Scanner in = new Scanner(inputStream);
+		
+		long medianModulo = 0;
+
+		while (in.hasNextInt()) {
+			int key = in.nextInt();
+			add(key);
+			medianModulo += getMedian();
+			System.out.println(getMedian());
+		} 
+		
+		System.out.println(medianModulo % 10000);
 
 	}	
 }
